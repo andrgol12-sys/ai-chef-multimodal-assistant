@@ -1,148 +1,246 @@
-# AI Chef
+# 🧑‍🍳 AI Chef — Multimodal Recipe Assistant
 
-CLI-приложение и веб-сайт на Python, которые по списку ингредиентов предлагают 3 блюда с рецептами через OpenAI или GigaChat. Поддерживают распознавание продуктов на фото через OpenAI Vision.
+AI Chef — это мультимодальный AI-ассистент, который помогает придумать рецепты из продуктов, которые уже есть дома.
 
-## Возможности
+Проект умеет работать с текстом и изображениями: пользователь может ввести список ингредиентов вручную или загрузить фото продуктов. Приложение распознаёт продукты через OpenAI Vision, генерирует рецепты через LLM и создаёт изображение готового блюда.
 
-- интерактивный ввод ингредиентов в терминале;
-- распознавание ингредиентов на фото (`--image`) через OpenAI Vision;
-- объединение ингредиентов с фото и из аргументов `--ingredients`;
-- генерация 3 разных блюд с названием, описанием, уровнем сложности, калорийностью, способом подачи, ингредиентами, пошаговым рецептом и временем приготовления;
-- вывод результата в консоль;
-- сохранение в папку `outputs` в формате `txt`, `json` или обоих сразу (включая найденные на фото ингредиенты и время обработки Vision);
-- генерация изображения первого блюда через OpenAI Image API в `outputs/images/`;
-- веб-интерфейс на Flask с формой ввода ингредиентов и загрузкой фото.
+---
 
-## Установка
+## 🚀 Возможности
+
+* 📝 ввод ингредиентов текстом;
+* 📷 загрузка фото продуктов;
+* 👁 распознавание ингредиентов через OpenAI Vision;
+* ⚠️ разделение продуктов на уверенно распознанные и сомнительные;
+* 🧠 генерация 3 рецептов через OpenAI или GigaChat;
+* 🖼 генерация изображения первого блюда через OpenAI Image API;
+* 🌐 веб-интерфейс на Flask;
+* 💻 CLI-режим для запуска из терминала;
+* 📁 сохранение результатов в TXT и JSON;
+* 🧪 обработка ошибок внешних API без падения приложения.
+
+---
+
+## 🧩 Архитектура
+
+```text
+Текст / Фото продуктов
+        ↓
+OpenAI Vision
+        ↓
+Список ингредиентов
+        ↓
+LLM: OpenAI / GigaChat
+        ↓
+3 рецепта
+        ↓
+OpenAI Image API
+        ↓
+Изображение готового блюда
+        ↓
+Flask UI + TXT/JSON outputs
+```
+
+---
+
+## 🛠️ Стек технологий
+
+* Python
+* Flask
+* OpenAI API
+* OpenAI Vision
+* OpenAI Image API
+* GigaChat API
+* python-dotenv
+* HTML / CSS
+* Git / GitHub
+
+---
+
+## 📸 Пример работы
+
+### Ввод
+
+Пользователь может:
+
+1. Ввести ингредиенты вручную:
+
+```text
+картофель, лук, яйца
+```
+
+2. Или загрузить фото продуктов.
+
+---
+
+### Вывод
+
+Приложение показывает:
+
+* распознанные ингредиенты;
+* сомнительные ингредиенты;
+* итоговый список продуктов;
+* 3 рецепта;
+* сложность, калорийность и время приготовления;
+* пошаговую инструкцию;
+* изображение первого блюда;
+* ссылки на сохранённые TXT/JSON файлы.
+
+---
+
+## 🌐 Запуск веб-интерфейса
+
+### 1. Клонировать репозиторий
+
+```bash
+git clone https://github.com/andrgol12-sys/ai-chef-multimodal-assistant.git
+cd ai-chef-multimodal-assistant
+```
+
+### 2. Создать виртуальное окружение
 
 ```bash
 python -m venv .venv
+```
+
+### 3. Активировать окружение
+
+Windows PowerShell:
+
+```bash
 .venv\Scripts\activate
+```
+
+### 4. Установить зависимости
+
+```bash
 pip install -r requirements.txt
 ```
 
-Скопируйте `.env.example` в `.env` и заполните ключи API.
+### 5. Создать `.env`
 
-## Переменные окружения
+Скопируйте файл `.env.example` в `.env` и добавьте свои ключи API.
 
-| Переменная | Описание |
-|---|---|
-| `LLM_PROVIDER` | Провайдер по умолчанию: `openai` или `gigachat` |
-| `OPENAI_API_KEY` | API-ключ OpenAI |
-| `OPENAI_MODEL` | Модель OpenAI для рецептов, по умолчанию `gpt-4o-mini` |
-| `OPENAI_VISION_MODEL` | Модель OpenAI для распознавания фото, по умолчанию `gpt-4o-mini` |
-| `OPENAI_IMAGE_MODEL` | Модель OpenAI для генерации изображения блюда, по умолчанию `dall-e-3` |
-| `OPENAI_IMAGE_SIZE` | Размер изображения, по умолчанию `1024x1024` |
-| `GIGACHAT_CREDENTIALS` | Authorization key GigaChat |
-| `GIGACHAT_MODEL` | Модель GigaChat, по умолчанию `GigaChat` |
-| `GIGACHAT_SCOPE` | Scope доступа, по умолчанию `GIGACHAT_API_PERS` |
-| `GIGACHAT_VERIFY_SSL` | Проверка SSL-сертификата (`true` / `false`) |
+```env
+LLM_PROVIDER=openai
 
-## Запуск
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_MODEL=gpt-4o-mini
+OPENAI_VISION_MODEL=gpt-4o-mini
 
-### Веб-сайт (Flask)
+OPENAI_IMAGE_MODEL=gpt-image-1
+OPENAI_IMAGE_SIZE=1024x1024
+
+GIGACHAT_CREDENTIALS=your_gigachat_authorization_key
+GIGACHAT_MODEL=GigaChat
+GIGACHAT_SCOPE=GIGACHAT_API_PERS
+GIGACHAT_VERIFY_SSL=false
+
+FLASK_SECRET_KEY=your_secret_key
+```
+
+### 6. Запустить Flask
 
 ```bash
 python app.py
 ```
 
-Откройте в браузере: [http://127.0.0.1:5000](http://127.0.0.1:5000)
+Откройте в браузере:
 
-На странице можно:
-- ввести ингредиенты текстом;
-- загрузить фото продуктов;
-- выбрать провайдера LLM;
-- включить сомнительные продукты с фото чекбоксом;
-- получить 3 рецепта, изображение первого блюда и ссылки на TXT/JSON.
+```text
+http://127.0.0.1:5000
+```
 
-### CLI
+---
 
-Интерактивный режим:
+## 💻 CLI-режим
+
+Интерактивный запуск:
 
 ```bash
 python main.py
 ```
 
-Только текстовые ингредиенты:
+Запуск по текстовым ингредиентам:
 
 ```bash
-python main.py --provider openai --format json --ingredients яйца молоко мука сахар
-python main.py --provider gigachat --format txt --ingredients "картофель, лук, морковь"
+python main.py --ingredients картофель лук яйца
 ```
 
-Распознавание продуктов на фото (OpenAI Vision):
+Запуск по фото:
 
 ```bash
-# файл в папке inputs/
-python main.py --image products.jpg
-
-# полный или относительный путь к файлу
-python main.py --image C:\Photos\fridge.png
+python main.py --image fridge.jpg
 ```
 
-Фото + дополнительные ингредиенты (списки объединяются):
+Фото + дополнительные ингредиенты:
 
 ```bash
-python main.py --image inputs/fridge.jpg --ingredients соль перец масло
-python main.py --image fridge.jpg --ingredients яйца молоко --provider openai --format both
+python main.py --image fridge.jpg --ingredients соль перец масло
 ```
 
-> **Примечание:** распознавание изображений всегда выполняется через OpenAI Vision (`OPENAI_API_KEY`). Генерация рецептов — через выбранный `--provider`.
+---
 
-## Аргументы CLI
-
-- `--provider` — `openai` или `gigachat`;
-- `--format` — `txt`, `json` или `both` (по умолчанию `both`);
-- `--ingredients` — список ингредиентов без интерактивного ввода;
-- `--image` — путь к изображению продуктов (jpg, jpeg, png, gif, webp).
-
-## Структура проекта
+## 📁 Структура проекта
 
 ```text
 AI Chef/
-├── app.py
-├── main.py
-├── config.py
+├── app.py                  # Flask-приложение
+├── main.py                 # CLI-запуск
+├── config.py               # конфигурация и переменные окружения
+├── models.py               # модели данных
+├── output.py               # сохранение TXT/JSON
+├── prompts.py              # промпты для LLM
+│
+├── llm/
+│   ├── openai_client.py    # генерация рецептов через OpenAI
+│   ├── openai_vision.py    # распознавание продуктов по фото
+│   ├── openai_image.py     # генерация изображения блюда
+│   ├── gigachat_client.py  # генерация рецептов через GigaChat
+│   ├── factory.py
+│   └── utils.py
+│
 ├── templates/
 │   └── index.html
+│
 ├── static/
 │   └── style.css
-├── models.py
-├── prompts.py
-├── output.py
-├── llm/
-│   ├── openai_client.py
-│   ├── openai_vision.py
-│   ├── openai_image.py
-│   ├── gigachat_client.py
-│   └── factory.py
-├── inputs/
-├── outputs/
-│   └── images/
+│
 ├── requirements.txt
 ├── .env.example
+├── .gitignore
 └── README.md
 ```
 
-## Пример результата
+---
 
-После запуска приложение создаст файлы вида:
+## 🧪 Что было протестировано
 
-- `outputs/recipes_20260531_153045.txt`
-- `outputs/recipes_20260531_153045.json`
-- `outputs/images/salat_iz_ovoshchey_20260531_153100.png` (первое блюдо из списка)
+* генерация рецептов по текстовым ингредиентам;
+* распознавание продуктов по фото;
+* обработка сомнительных ингредиентов;
+* генерация изображения готового блюда;
+* сохранение результатов в TXT и JSON;
+* запуск через CLI;
+* запуск через Flask-интерфейс.
 
-В JSON при использовании `--image` дополнительно сохраняется блок `vision`:
+---
 
-```json
-{
-  "vision": {
-    "image_path": "G:/.../inputs/fridge.jpg",
-    "detected_ingredients": ["яйца", "молоко", "сыр"],
-    "text_ingredients": ["соль", "перец"],
-    "processing_time_sec": 2.145
-  },
-  "source_ingredients": ["яйца", "молоко", "сыр", "соль", "перец"],
-  "dishes": []
-}
-```
+## ⚠️ Ограничения MVP
+
+Распознавание продуктов по фото зависит от качества изображения. Если продукты находятся в сетке, прозрачном пакете или упаковке, Vision-модель может ошибиться. Поэтому в проект добавлен механизм сомнительных ингредиентов: пользователь сам решает, включать их в итоговый список или нет.
+
+---
+
+## 📌 Статус проекта
+
+MVP готов.
+
+Проект создан как учебная работа по теме мультимодальности и вайбкодинга: от CLI-прототипа до веб-интерфейса с Vision, LLM и генерацией изображения.
+
+---
+
+## 👤 Author
+
+Created by [andrgol12-sys](https://github.com/andrgol12-sys)
+AIGolubev
