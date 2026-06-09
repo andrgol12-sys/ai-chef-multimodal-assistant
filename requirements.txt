@@ -1,0 +1,4 @@
+openai>=1.40.0
+gigachat>=0.1.36
+python-dotenv>=1.0.1
+flask>=3.0.0

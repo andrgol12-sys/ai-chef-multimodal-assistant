@@ -1,0 +1,26 @@
+.env
+.venv/
+**pycache**/
+*.py[cod]
+
+# Generated files
+
+outputs/
+inputs/
+
+# IDE
+
+.vscode/
+.idea/
+
+# System
+
+.DS_Store
+Thumbs.db
+
+# Keep empty folders if needed
+
+!outputs/.gitkeep
+!outputs/images/.gitkeep
+!inputs/.gitkeep
+

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Chef</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>AI Chef</h1>
+      <p class="subtitle">Подбор рецептов по ингредиентам и фото продуктов</p>
+    </header>
+
+    <section class="card">
+      <h2>Ингредиенты</h2>
+      <form id="chef-form" method="post" enctype="multipart/form-data">
+        <label class="field">
+          <span>Список ингредиентов</span>
+          <textarea
+            name="ingredients"
+            rows="4"
+            placeholder="Например: яйца, молоко, картофель"
+          >{{ ingredients_text or '' }}</textarea>
+        </label>
+
+        <label class="field">
+          <span>Фото продуктов</span>
+          <input type="file" name="photo" accept=".jpg,.jpeg,.png,.gif,.webp,image/*">
+        </label>
+
+        <label class="field inline">
+          <span>LLM-провайдер</span>
+          <select name="provider">
+            <option value="openai" {% if default_provider == 'openai' %}selected{% endif %}>OpenAI</option>
+            <option value="gigachat" {% if default_provider == 'gigachat' %}selected{% endif %}>GigaChat</option>
+          </select>
+        </label>
+
+        <label class="checkbox">
+          <input type="checkbox" name="use_uncertain" {% if use_uncertain %}checked{% endif %}>
+          Использовать сомнительные продукты с фото (если распознаны)
+        </label>
+
+        <button type="submit" class="btn-primary" id="submit-btn">Сгенерировать рецепты</button>
+      </form>
+
+      <div id="loading" class="loading hidden">
+        <div class="spinner"></div>
+        <p>Обрабатываю запрос, это может занять минуту…</p>
+        <ul class="status-list">
+          <li>Распознаю продукты…</li>
+          <li>Генерирую рецепты…</li>
+          <li>Создаю изображение блюда…</li>
+        </ul>
+      </div>
+    </section>
+
+    {% if error %}
+    <section class="card error-card">
+      <h2>Ошибка</h2>
+      <p>{{ error }}</p>
+    </section>
+    {% endif %}
+
+    {% if statuses %}
+    <section class="card">
+      <h2>Статус обработки</h2>
+      <ul class="status-list done-list">
+        {% for status in statuses %}
+        <li class="{% if status.done %}done{% else %}failed{% endif %}">{{ status.label }}</li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+
+    {% if vision_detected or vision_uncertain or text_ingredients or final_ingredients %}
+    <section class="card">
+      <h2>Ингредиенты</h2>
+
+      {% if vision_detected %}
+      <div class="info-block">
+        <h3>Уверенно распознано на фото</h3>
+        <p>{{ vision_detected | join(', ') }}</p>
+      </div>
+      {% endif %}
+
+      {% if vision_uncertain %}
+      <div class="info-block warning">
+        <h3>Под сомнением</h3>
+        <ul>
+          {% for item in vision_uncertain %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+        {% if vision_uncertain_included %}
+        <p class="note">Сомнительные продукты включены в итоговый список.</p>
+        {% else %}
+        <p class="note">Сомнительные продукты не включены. Отметьте чекбокс при следующем запросе.</p>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {% if text_ingredients %}
+      <div class="info-block">
+        <h3>Из текстового поля</h3>
+        <p>{{ text_ingredients | join(', ') }}</p>
+      </div>
+      {% endif %}
+
+      {% if vision_processing_time is not none %}
+      <div class="info-block">
+        <h3>Время обработки Vision</h3>
+        <p>{{ '%.3f' | format(vision_processing_time) }} сек</p>
+      </div>
+      {% endif %}
+
+      {% if final_ingredients %}
+      <div class="info-block highlight">
+        <h3>Итоговый список</h3>
+        <p>{{ final_ingredients | join(', ') }}</p>
+      </div>
+      {% endif %}
+    </section>
+    {% endif %}
+
+    {% if dishes %}
+    <section class="card">
+      <h2>Рецепты</h2>
+      <div class="recipes">
+        {% for dish in dishes %}
+        <article class="recipe">
+          <h3>{{ loop.index }}. {{ dish.name }}</h3>
+          <p class="description">{{ dish.description }}</p>
+          <div class="meta">
+            <span><strong>Сложность:</strong> {{ dish.difficulty }}</span>
+            <span><strong>Калорийность:</strong> {{ dish.calories }}</span>
+            <span><strong>Время:</strong> {{ dish.cooking_time }}</span>
+          </div>
+          <p><strong>Подача:</strong> {{ dish.serving_suggestion }}</p>
+
+          <h4>Ингредиенты</h4>
+          <ul>
+            {% for item in dish.ingredients %}
+            <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+
+          <h4>Рецепт</h4>
+          <ol>
+            {% for step in dish.steps %}
+            <li>{{ step }}</li>
+            {% endfor %}
+          </ol>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    {% if dish_image_path or dish_image_error %}
+    <section class="card">
+      <h2>Изображение блюда</h2>
+      {% if dish_image_path %}
+      <img src="{{ dish_image_path }}" alt="Сгенерированное блюдо" class="dish-image">
+      <p class="note">Изображение первого рецепта из списка.</p>
+      {% endif %}
+      {% if dish_image_error %}
+      <p class="warning-text">Не удалось сгенерировать изображение: {{ dish_image_error }}</p>
+      {% endif %}
+    </section>
+    {% endif %}
+
+    {% if saved_files %}
+    <section class="card">
+      <h2>Сохранённые файлы</h2>
+      <ul class="file-links">
+        {% for file in saved_files %}
+        <li><a href="{{ file.url }}" target="_blank" rel="noopener">{{ file.name }}</a></li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+  </div>
+
+  <script>
+    const form = document.getElementById('chef-form');
+    const loading = document.getElementById('loading');
+    const submitBtn = document.getElementById('submit-btn');
+
+    form.addEventListener('submit', () => {
+      loading.classList.remove('hidden');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Обработка…';
+    });
+  </script>
+</body>
+</html>
